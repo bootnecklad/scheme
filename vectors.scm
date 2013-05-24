@@ -1,3 +1,4 @@
+;;; (C) Marc Cleave 2013
 ;;; a vector has the format:
 ;;; '(i j k)
 ;;; where i is the i component, etc
