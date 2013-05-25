@@ -6,14 +6,10 @@
 ;;; the vector equation of a line is given:
 ;;; '((x y z) (i j k))
 ;;;
-;;; where (x y z) is the point on the line, u is the scalar multiple of the direction and (i j k) is the direction of the line
+;;; where (x y z) is the point on the line and (i j k) is the direction of the line
 
 
 (define nil '())
-
-
-;;; defines a vector to be used
-(define toy-vector '(1 2 3))
 
 ;;; returns the i component of the vector
 (define (i-pos vctr)
