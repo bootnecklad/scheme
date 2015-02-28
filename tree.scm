@@ -25,24 +25,29 @@
                                            (make-leaf 4)
                                            empty-tree)))
 
+;;; Fundamental for tree data structure type
 (define empty-tree nil)
 
 ;;; Makes a node
+;;; Depends on "internal representation" of node type
 (define make-node
   (lambda (value child-left child-right)
     (list value child-left child-right)))
 
 ;;; Gets the value of a node
+;;; Depends on "internal representation" of node type
 (define node-value
   (lambda (node)
     (car node)))
 
 ;;; Gets the child left of a node
+;;; Depends on "internal representation" of node type
 (define node-left
   (lambda (node)
     (cadr node)))
 
 ;;; Gets the child right of a node
+;;; Depends on "internal representation" of node type
 (define node-right
   (lambda (node)
     (caddr node)))
