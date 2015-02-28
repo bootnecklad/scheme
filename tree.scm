@@ -14,6 +14,7 @@
 
 
 (use (srfi 1))
+(define nil '())
 
 ;;; Example tree
 (define example-tree (make-node 10
@@ -24,13 +25,7 @@
                                            (make-leaf 4)
                                            empty-tree)))
 
-;;; Checks if thing is a node
-(define node?
-  (lambda (node)
-    (and (list? node)
-         (= (length node) 3)
-         (tree? (node-left node))
-         (tree? (node-right node)))))
+(define empty-tree nil)
 
 ;;; Makes a node
 (define make-node
@@ -51,6 +46,15 @@
 (define node-right
   (lambda (node)
     (caddr node)))
+
+;;; Checks if thing is a node
+;;; Depends on "internal representation" of node/tree type
+(define node?
+  (lambda (node)
+    (and (list? node)
+         (= (length node) 3)
+         (tree? (node-left node))
+         (tree? (node-right node)))))
 
 ;;; Checks if a tree is empty
 (define empty-tree?
