@@ -76,7 +76,7 @@
 ;;; fetches the numeric value associated with its name
 (define get-numeric-of
   (lambda (register-name)
-    (let* ((register-numeric (member register-name (flatten register-associations))))
+    (let ((register-numeric (member register-name (flatten register-associations))))
       (if register-numeric
           (cadr register-numeric)
           (error "INVALID REGISTER NAME")))))
@@ -231,7 +231,7 @@
     (member word forth-primitives)))
 
 ;;; defines the primitives for this forth implementation
-(define forth-primitives '(: + - * / =? DUP DISP IF PRINT ?BRANCH BRANCH))
+(define forth-primitives '(: + - * / =? <? >? DUP DROP DISP PRINT ?BRANCH BRANCH CR))
 
 ;;; yep.
 (define execute-primitive
@@ -246,22 +246,34 @@
         (begin (cond
                 ((eq? word '+) (push-data-stack! forth-thing (+ (pop-data-stack forth-thing)
                                                                 (pop-data-stack forth-thing))))
-                ((eq? word '-) (push-data-stack! forth-thing (- (pop-data-stack forth-thing)
-                                                                (pop-data-stack forth-thing))))
+                ((eq? word '-) (push-data-stack! forth-thing (let ((A (pop-data-stack forth-thing))
+                                                                    (B (pop-data-stack forth-thing)))
+                                                               (- B A))))
                 ((eq? word '*) (push-data-stack! forth-thing (* (pop-data-stack forth-thing)
                                                                 (pop-data-stack forth-thing))))
-                ((eq? word '/) (push-data-stack! forth-thing (/ (pop-data-stack forth-thing)
-                                                                (pop-data-stack forth-thing))))
+                ((eq? word '/) (push-data-stack! forth-thing (let ((A (pop-data-stack forth-thing))
+                                                                   (B (pop-data-stack forth-thing)))
+                                                               (/ B A))))
                 ((eq? word '=?) (if (= (pop-data-stack forth-thing)
-                                      (pop-data-stack forth-thing))
-                                   (push-data-stack! forth-thing #t)
-                                   (push-data-stack! forth-thing #f)))
+                                       (pop-data-stack forth-thing))
+                                    (push-data-stack! forth-thing #t)
+                                    (push-data-stack! forth-thing #f)))
+                ((eq? word '<?) (if (> (pop-data-stack forth-thing)
+                                       (pop-data-stack forth-thing))
+                                    (push-data-stack! forth-thing #t)
+                                    (push-data-stack! forth-thing #f)))
+                ((eq? word '>?) (if (< (pop-data-stack forth-thing)
+                                       (pop-data-stack forth-thing))
+                                    (push-data-stack! forth-thing #t)
+                                    (push-data-stack! forth-thing #f)))
+                ((eq? word 'DROP) (pop-data-stack forth-thing))
                 ((eq? word 'DUP) (push-data-stack! forth-thing (vector-ref (forth-processor-data-stack forth-thing)
                                                                            (subtractone (read-register forth-thing 'data-stack-pointer)))))
                 ((eq? word 'DISP) (display (pop-data-stack forth-thing)))
                 ((eq? word 'PRINT) (let ((char? (pop-data-stack forth-thing)))
                                      (if char?
-                                         (display (integer->char char?))))))
+                                         (display (integer->char char?)))))
+                ((eq? word 'CR) (display #\newline)))
                (execute-expression expr (+ ptr 1))))))
          
 ;;; removes conditions
