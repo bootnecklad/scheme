@@ -2,10 +2,6 @@
 
 Just a basic Forth-like implementation in chicken scheme.
 
-### Features: ##
-  - Ability to define new words with :
-  - 64KB Data Stack
-
 ### Building - OSX
 
 Install homebrew if you don't have it already, then chicken scheme, then compile.
@@ -15,7 +11,7 @@ Install homebrew if you don't have it already, then chicken scheme, then compile
     
 Then run the Forth implementation!
 
-    £ ./forth
+    $ ./forth
 
 ### Useage ###
 
