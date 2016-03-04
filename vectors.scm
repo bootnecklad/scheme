@@ -45,18 +45,18 @@
 
 ;;; returns the addition of two vectors
 (define (add-vectors a b)
-  (create-vector (+ (i-pos a) 
+  (create-vector (+ (i-pos a)
                     (i-pos b))
-                 (+ (j-pos a) 
-                    (j-pos b)) 
-                 (+ (k-pos a) 
+                 (+ (j-pos a)
+                    (j-pos b))
+                 (+ (k-pos a)
                     (k-pos b))))
 
 ;;; returns the subtraction of two vectors
 (define (subtract-vectors a b)
-  (create-vector (- (i-pos b) 
+  (create-vector (- (i-pos b)
                     (i-pos a))
-                 (- (j-pos b) 
+                 (- (j-pos b)
                     (j-pos a))
                  (- (k-pos b)
                     (k-pos a))))
@@ -71,17 +71,17 @@
 
 ;;; checks if the two vectors are equal
 (define (direction-eq? a b)
-  (and (= (i-pos b) 
+  (and (= (i-pos b)
           (i-pos a))
-       (= (j-pos b) 
+       (= (j-pos b)
           (j-pos a))
-       (= (k-pos b) 
+       (= (k-pos b)
           (k-pos a))))
 
 
 ;;; checks if the magnitude of two vectors are equal
 (define (magnitude-eq? a b)
-  (= (vector-size a) 
+  (= (vector-size a)
      (vector-size b)))
 
 ;;; returns the distance of two vectors
@@ -91,18 +91,34 @@
 ;;; returns the scalar product of two vectors
 ;;; a.b
 (define (scalar-product a b)
-  (+ (* (i-pos a) 
+  (+ (* (i-pos a)
         (i-pos b))
      (* (j-pos a)
         (j-pos b))
-     (* (k-pos a) 
+     (* (k-pos a)
         (k-pos b))))
+
+;;; returns the vector product of two vectors
+;;; a x b
+(define (vector-product a b)
+  (create-vector (- (* (j-pos a)
+                       (k-pos b))
+                    (* (j-pos b)
+                       (k-pos a)))
+                 (- (* (i-pos b)
+                       (k-pos a))
+                    (* (i-pos a)
+                       (k-pos b)))
+                 (- (* (i-pos a)
+                       (j-pos b))
+                    (* (i-pos b)
+                       (j-pos a)))))
 
 ;;; returns the angle between two vectors using:
 ;;;  cos x = a.b / |a||b|
 (define (angle-between-vectors a b)
   (acos (/ (scalar-product a b)
-           (* (vector-size a) 
+           (* (vector-size a)
               (vector-size b)))))
 
 ;;; convert radians into decimal
@@ -125,37 +141,45 @@
 
 ;;; returns the direction from the equation of a line
 (define (get-direction vctr)
-  (cadadr vctr))
+  (cadr vctr))
 
 ;;; returns if a vector lies on a line
 (define (vector-on-line? eqn a)
-  (= (/ (- (i-pos a) 
-           (i-pos (get-point eqn))) 
+  (= (/ (- (i-pos a)
+           (i-pos (get-point eqn)))
         (i-pos (get-direction eqn)))
-     (/ (- (j-pos a) 
-           (j-pos (get-point eqn))) 
+     (/ (- (j-pos a)
+           (j-pos (get-point eqn)))
         (j-pos (get-direction eqn)))
-     (/ (- (k-pos a) 
+     (/ (- (k-pos a)
            (k-pos (get-point eqn)))
         (k-pos (get-direction eqn)))))
 
 ;;; returns if two vectors are parallel
 (define (parallel? a b)
-  (vectors-eq? (get-direction a) 
+  (vectors-eq? (get-direction a)
                (get-direction b)))
 
-;;; returns if two vectors intersect
-;;; haha... you think I'm going back to gaussian elimination? No thanks 
+;;; returns if two lines lie in the same plane
+(define (coplanar? a b)
+  (parallel? (vector-product (get-direction a)
+                             (get-direction b))
+             (vector-product (create-vector (- (get-point a)
+                                               (get-point b)))
+                             (get-direction b))))
+
+;;; returns if two lines intersect
 (define (intersect? a b)
-  '())
+  (and (not (parallel? a b))
+       (coplanar? a b)))
 
 ;;; returns if two vectors are scew
 ;;; two vectors are skew if they do not intersect and are not parallel
 (define (skew? a b)
-  (not (and (intersect? a b) 
-            (parallel? a b))))
+  (not (or (intersect? a b)
+           (parallel? a b))))
 
 ;;; returns the angle of two vector equation of lines
 (define (angle-between-lines a b)
-  (angle-between-vectors (get-direction a) 
+  (angle-between-vectors (get-direction a)
                          (get-direction b)))
