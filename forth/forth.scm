@@ -52,7 +52,7 @@
     (let ((user-input (read)))
       (if (list? user-input)
           (let* ((clean-input (clean-dirty-input user-input))
-                (result (evaluate clean-input)))
+                 (result (evaluate clean-input)))
             result)
           (display "INVALID TITAN-FORTH\n")))
     (controller)))
@@ -68,11 +68,11 @@
 ;;; checks if first word is : (define new word)
 (define evaluate
   (lambda (expr)
-     (if (null? expr)
-         nil
-         (cond
-          ((eq? (car expr) ':) (create-word expr))
-          (else (execute-expression expr))))))
+    (if (null? expr)
+        nil
+        (cond
+         ((eq? (car expr) ':) (create-word expr))
+         (else (execute-expression expr))))))
 
 ;;; deals with expressions, using pointers
 (define execute-expression
@@ -134,15 +134,15 @@
   (lambda (word)
     (cond
      ((eq? word '+) (push-data-stack! forth-machine (+ (pop-data-stack forth-machine)
-                                                     (pop-data-stack forth-machine))))
+                                                       (pop-data-stack forth-machine))))
      ((eq? word '-) (push-data-stack! forth-machine (let ((A (pop-data-stack forth-machine))
-                                                        (B (pop-data-stack forth-machine)))
-                                                    (- B A))))
+                                                          (B (pop-data-stack forth-machine)))
+                                                      (- B A))))
      ((eq? word '*) (push-data-stack! forth-machine (* (pop-data-stack forth-machine)
-                                                     (pop-data-stack forth-machine))))
+                                                       (pop-data-stack forth-machine))))
      ((eq? word '/) (push-data-stack! forth-machine (let ((A (pop-data-stack forth-machine))
-                                                        (B (pop-data-stack forth-machine)))
-                                                    (/ B A))))
+                                                          (B (pop-data-stack forth-machine)))
+                                                      (/ B A))))
      ((eq? word '=?) (if (= (pop-data-stack forth-machine)
                             (pop-data-stack forth-machine))
                          (push-data-stack! forth-machine #t)
@@ -157,7 +157,7 @@
                          (push-data-stack! forth-machine #f)))
      ((eq? word 'DROP) (pop-data-stack forth-machine))
      ((eq? word 'DUP) (push-data-stack! forth-machine (vector-ref (forth-processor-data-stack forth-machine)
-                                                                (subtractone (read-register forth-machine 'data-stack-pointer)))))
+                                                                  (subtractone (read-register forth-machine 'data-stack-pointer)))))
      ((eq? word 'DISP) (display (pop-data-stack forth-machine)))
      ((eq? word 'PRINT) (let ((char? (pop-data-stack forth-machine)))
                           (if char?
@@ -180,8 +180,7 @@
 
 (: zero? #|n -- ?|# 0 =?)                                                                    
 (: half 2 /)                                                             
-(: double 2 *)                                                           
-Quadrescence-forth-lib                                                   
+(: double 2 *)                                                  
 (: when #|? thing --|# () if)                                            
 (: unless #|? thing --|# () swap if)                                     
 (: not #|? -- ?|# (#f) (#t) if)                                          
