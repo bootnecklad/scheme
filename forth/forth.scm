@@ -96,12 +96,12 @@
 ;;; adds word definition to word-list
 (define create-word
   (lambda (input)
-    (forth-words-set! forth-machine (cons (car input) (cdr input)))))
+    (forth-words-set! forth-machine (list (cadr input) (cddr input)))))
 
 ;;; returns the definition of a word
 (define get-word-definition
   (lambda (word)
-    (let ((word-definition (member word (forth-words machine))))
+    (let ((word-definition (member word (forth-words forth-machine))))
       (if word-definition
           (cadr word-definition)
           (begin (display "INVALID WORD: ")
@@ -111,7 +111,7 @@
 ;;; returns whether a word is valid or not
 (define valid-word?
   (lambda (object)
-    (let ((word-definition (member word (forth-words machine))))
+    (let ((word-definition (member object (forth-words forth-machine))))
       (if word-definition
           #t
           #f))))
@@ -156,8 +156,7 @@
                          (push-data-stack! forth-machine #t)
                          (push-data-stack! forth-machine #f)))
      ((eq? word 'DROP) (pop-data-stack forth-machine))
-     ((eq? word 'DUP) (push-data-stack! forth-machine (vector-ref (forth-processor-data-stack forth-machine)
-                                                                  (subtractone (read-register forth-machine 'data-stack-pointer)))))
+     ((eq? word 'DUP) (push-data-stack! forth-machine (car (forth-stack forth-machine))))
      ((eq? word 'DISP) (display (pop-data-stack forth-machine)))
      ((eq? word 'PRINT) (let ((char? (pop-data-stack forth-machine)))
                           (if char?
