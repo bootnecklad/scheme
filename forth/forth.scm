@@ -143,7 +143,7 @@
     (let ((user-input (read)))
       (if (list? user-input)
           (let* ((clean-input (clean-dirty-input user-input))
-                (result (evaluate nil clean-input)))
+                (result (evaluate clean-input)))
             result)
           (display "INVALID TITAN-FORTH\n")))
     (controller)))
@@ -158,42 +158,26 @@
 
 ;;; checks if first word is : (define new word)
 (define evaluate
-  (lambda (word expr)
+  (lambda (expr)
      (if (null? expr)
          nil
          (cond
           ((eq? (car expr) ':) (create-word expr))
-          ((null? word) (evaluate 0 (remove-conditionals expr)))
-          ((zero? word) (execute-expression expr 0))))))
-
-;; ;;; deals with single expressions
-;; (define execute-expression
-;;   (lambda (expr)
-;;     (let* ((object (car expr))
-;;            (new-expr (cdr expr)))
-;;       (cond
-;;        ((primitive? object) (execute-primitive object))
-;;        ((number? object) (push-data-stack! forth-thing object))
-;;        ((boolean? object) (push-data-stack! object))
-;;        ((symbol? object) (evaluate nil (get-word-definition object))))
-;;       (evaluate 0 new-expr))))
+          (else (execute-expression expr))))))
 
 ;;; deals with expressions, using pointers
 (define execute-expression
-  (lambda (expr ptr)
-    (if (list? expr)
-        (execute-expression (list->vector expr) ptr)
-        (if (> (vector-length expr) ptr)
-            (let* ((object (vector-ref expr ptr)))
-              (cond
-               ((primitive? object) (execute-primitive expr ptr object))
-               ((number? object) (begin (push-data-stack! forth-thing object)
-                                        (execute-expression expr (addone ptr))))
-               ((boolean? object) (begin (push-data-stack! forth-thing object)
-                                         (execute-expression expr (addone ptr))))
-               ((symbol? object) (begin (evaluate nil (get-word-definition object))
-                                        (execute-expression expr (addone ptr))))))
-            nil))))
+  (lambda (expr)
+    (if (null? expr)
+        nil
+        (let ((object (car expr)))
+          (cond
+           ((primitive? object) (execute-primitive object))
+           ((quotation? object) (push-data-stack! forth-thing object))
+           ((number? object) (push-data-stack! forth-thing object))
+           ((boolean? object) (push-data-stack! forth-thing object))
+           ((symbol? object) (evaluate (get-word-definition object))))
+          (execute-expression (cdr expr))))))
 
 ;;; adds word definition to word-list
 (define create-word
@@ -227,55 +211,58 @@
 
 ;;; returns whether the given word is a primitive or not
 (define primitive?
-  (lambda (word)
-    (member word forth-primitives)))
+  (lambda (object)
+    (member object forth-primitives)))
+
+;;; returns whether the given word is a quotation or not
+(define quotation?
+  (lambda (object)
+    (list? object)))
 
 ;;; defines the primitives for this forth implementation
-(define forth-primitives '(: + - * / =? <? >? DUP DROP DISP PRINT ?BRANCH BRANCH CR))
+(define forth-primitives '(: + - * / =? <? >? IF CALL DUP DROP DISP PRINT ?BRANCH BRANCH CR))
 
 ;;; yep.
 (define execute-primitive
-  (lambda (expr ptr word)
-    (if (or (eq? word '?BRANCH)
-            (eq? word 'BRANCH))
-        (cond
-         ((eq? word '?BRANCH) (if (pop-data-stack forth-thing)
-                                  (execute-expression expr (+ ptr 2))
-                                  (execute-expression expr (+ 2 ptr (vector-ref expr (+ ptr 1))))))
-         ((eq? word 'BRANCH) (execute-expression expr (+ ptr (vector-ref expr (+ ptr 1))))))
-        (begin (cond
-                ((eq? word '+) (push-data-stack! forth-thing (+ (pop-data-stack forth-thing)
-                                                                (pop-data-stack forth-thing))))
-                ((eq? word '-) (push-data-stack! forth-thing (let ((A (pop-data-stack forth-thing))
-                                                                    (B (pop-data-stack forth-thing)))
-                                                               (- B A))))
-                ((eq? word '*) (push-data-stack! forth-thing (* (pop-data-stack forth-thing)
-                                                                (pop-data-stack forth-thing))))
-                ((eq? word '/) (push-data-stack! forth-thing (let ((A (pop-data-stack forth-thing))
-                                                                   (B (pop-data-stack forth-thing)))
-                                                               (/ B A))))
-                ((eq? word '=?) (if (= (pop-data-stack forth-thing)
-                                       (pop-data-stack forth-thing))
-                                    (push-data-stack! forth-thing #t)
-                                    (push-data-stack! forth-thing #f)))
-                ((eq? word '<?) (if (> (pop-data-stack forth-thing)
-                                       (pop-data-stack forth-thing))
-                                    (push-data-stack! forth-thing #t)
-                                    (push-data-stack! forth-thing #f)))
-                ((eq? word '>?) (if (< (pop-data-stack forth-thing)
-                                       (pop-data-stack forth-thing))
-                                    (push-data-stack! forth-thing #t)
-                                    (push-data-stack! forth-thing #f)))
-                ((eq? word 'DROP) (pop-data-stack forth-thing))
-                ((eq? word 'DUP) (push-data-stack! forth-thing (vector-ref (forth-processor-data-stack forth-thing)
-                                                                           (subtractone (read-register forth-thing 'data-stack-pointer)))))
-                ((eq? word 'DISP) (display (pop-data-stack forth-thing)))
-                ((eq? word 'PRINT) (let ((char? (pop-data-stack forth-thing)))
-                                     (if char?
-                                         (display (integer->char char?)))))
-                ((eq? word 'CR) (display #\newline)))
-               (execute-expression expr (+ ptr 1))))))
-         
+  (lambda (word)
+    (cond
+     ((eq? word '+) (push-data-stack! forth-thing (+ (pop-data-stack forth-thing)
+                                                     (pop-data-stack forth-thing))))
+     ((eq? word '-) (push-data-stack! forth-thing (let ((A (pop-data-stack forth-thing))
+                                                        (B (pop-data-stack forth-thing)))
+                                                    (- B A))))
+     ((eq? word '*) (push-data-stack! forth-thing (* (pop-data-stack forth-thing)
+                                                     (pop-data-stack forth-thing))))
+     ((eq? word '/) (push-data-stack! forth-thing (let ((A (pop-data-stack forth-thing))
+                                                        (B (pop-data-stack forth-thing)))
+                                                    (/ B A))))
+     ((eq? word '=?) (if (= (pop-data-stack forth-thing)
+                            (pop-data-stack forth-thing))
+                         (push-data-stack! forth-thing #t)
+                         (push-data-stack! forth-thing #f)))
+     ((eq? word '<?) (if (> (pop-data-stack forth-thing)
+                            (pop-data-stack forth-thing))
+                         (push-data-stack! forth-thing #t)
+                         (push-data-stack! forth-thing #f)))
+     ((eq? word '>?) (if (< (pop-data-stack forth-thing)
+                            (pop-data-stack forth-thing))
+                         (push-data-stack! forth-thing #t)
+                         (push-data-stack! forth-thing #f)))
+     ((eq? word 'DROP) (pop-data-stack forth-thing))
+     ((eq? word 'DUP) (push-data-stack! forth-thing (vector-ref (forth-processor-data-stack forth-thing)
+                                                                (subtractone (read-register forth-thing 'data-stack-pointer)))))
+     ((eq? word 'DISP) (display (pop-data-stack forth-thing)))
+     ((eq? word 'PRINT) (let ((char? (pop-data-stack forth-thing)))
+                          (if char?
+                              (display (integer->char char?)))))
+     ((eq? word 'CR) (display #\newline))
+     ((eq? word 'CALL) (evaluate (pop-data-stack forth-thing)))
+     ((eq? word 'IF) (let* ((FALSE-CASE (pop-data-stack forth-thing))
+                            (TRUE-CASE (pop-data-stack forth-thing)))
+                       (if (pop-data-stack forth-thing)
+                           (evaluate TRUE-CASE)
+                           (evaluate FALSE-CASE)))))))
+
 ;;; removes conditions
 (define remove-conditionals
   (lambda (expr)
@@ -309,7 +296,7 @@
     (cond
      ((equal? item (car list)) (cdr list))
      (else (cons (car list) (delete item (cdr list)))))))
-    
+
 ;;; count how many things until the next one
 (define next-thing
   (lambda (expr count)
@@ -324,3 +311,20 @@
 (define forth-thing (new-forth-processor))
 
 (controller)
+
+
+;;; awesome function definitions
+
+
+(: zero? #|n -- ?|# 0 =?)                                                                    
+(: half 2 /)                                                             
+(: double 2 *)                                                           
+Quadrescence-forth-lib                                                   
+(: when #|? thing --|# () if)                                            
+(: unless #|? thing --|# () swap if)                                     
+(: not #|? -- ?|# (#f) (#t) if)                                          
+(: loop #|thing --|# dup call loop)
+(: negative? 0 <)
+(: abs dup negative? (-) () if)                 
+(: even? dup zero? (drop #t) (abs 1 - odd?) if) 
+(: odd? dup zero? (drop #f) (abs 1 - even?) if) 
